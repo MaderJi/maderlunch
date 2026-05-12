@@ -1,78 +1,100 @@
 """Management-Command: lokalen User mit Initialpasswort anlegen.
 
 Beispiel:
-    python manage.py createlocaluser --username m.mueller --first Marie --last Müller \
-        --email marie.mueller@mader.eu --role User --employee-id 12345
+    python manage.py createlocaluser \\
+        --username m.mueller --first Marie --last Müller \\
+        --email marie.mueller@mader.eu --role MANAGER --employee-id 12345
+
+Das generierte Initialpasswort wird einmal auf der Konsole ausgegeben.
+must_change_password=True erzwingt einen Passwortwechsel beim ersten Login.
 """
+from __future__ import annotations
+
 import secrets
 import string
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from accounts.models import UserProfile
-from audit.services import log_event
+from accounts.models import AuthSource, Role, UserProfile
+
+User = get_user_model()
 
 
 def _generate_password(length: int = 14) -> str:
-    alphabet = string.ascii_letters + string.digits + "!#$%&*+-=?@"
-    while True:
-        pw = "".join(secrets.choice(alphabet) for _ in range(length))
-        # Mindestanforderungen sicherstellen
-        if (any(c.islower() for c in pw)
-                and any(c.isupper() for c in pw)
-                and any(c.isdigit() for c in pw)
-                and any(c in "!#$%&*+-=?@" for c in pw)):
-            return pw
+    """Erzeugt ein zufälliges Initialpasswort.
+
+    Bewusst keine Sonderzeichen, die in Terminals/Copy&Paste oft Probleme machen
+    (z.B. '\\', '$', '"'). Trotzdem hinreichend stark durch Länge und Entropie.
+    """
+    alphabet = string.ascii_letters + string.digits + "!@#%&*-_+="
+    return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
 class Command(BaseCommand):
-    help = "Legt einen lokalen Benutzer an und gibt ein einmaliges Initialpasswort aus."
+    help = "Lokalen MaderLunch-User mit Initialpasswort anlegen."
 
     def add_arguments(self, parser):
-        parser.add_argument("--username", required=True)
-        parser.add_argument("--first", required=True)
-        parser.add_argument("--last", required=True)
-        parser.add_argument("--email", required=True)
-        parser.add_argument("--role", choices=("User", "Admin"), default="User")
-        parser.add_argument("--employee-id", default=None)
+        parser.add_argument("--username", required=True, help="z.B. m.mueller")
+        parser.add_argument("--first", required=True, help="Vorname")
+        parser.add_argument("--last", required=True, help="Nachname")
+        parser.add_argument("--email", required=True, help="E-Mail-Adresse")
+        parser.add_argument(
+            "--role",
+            required=False,
+            default=Role.USER,
+            choices=[r.value for r in Role],
+            help="Rolle (USER, MANAGER, ADMIN). Default: USER.",
+        )
+        parser.add_argument("--employee-id", required=False, help="Mitarbeiterkennung")
+        parser.add_argument(
+            "--no-force-password-change",
+            action="store_true",
+            help="must_change_password NICHT setzen (für Break-Glass-Konten).",
+        )
 
-    def handle(self, *args, **opts):
-        User = get_user_model()
-        username = opts["username"]
+    @transaction.atomic
+    def handle(self, *args, **options):
+        username = options["username"]
         if User.objects.filter(username=username).exists():
-            raise CommandError(f"Benutzer '{username}' existiert bereits.")
+            raise CommandError(f"User '{username}' existiert bereits.")
+        if User.objects.filter(email__iexact=options["email"]).exists():
+            raise CommandError(f"E-Mail '{options['email']}' wird bereits verwendet.")
 
         password = _generate_password()
-        with transaction.atomic():
-            user = User.objects.create_user(
-                username=username,
-                email=opts["email"],
-                first_name=opts["first"],
-                last_name=opts["last"],
-                password=password,
-            )
-            UserProfile.objects.create(
-                user=user,
-                employee_id=opts["employee_id"],
-                must_change_password=True,
-            )
-            grp, _ = Group.objects.get_or_create(name=opts["role"])
-            user.groups.add(grp)
-            if opts["role"] == "Admin":
-                user.is_staff = True
-                user.save(update_fields=["is_staff"])
+        role = options["role"]
 
-            log_event(
-                None, "user.create",
-                actor=None,
-                target=user,
-                meta={"role": opts["role"], "via": "cli"},
-            )
+        user = User.objects.create_user(
+            username=username,
+            email=options["email"],
+            password=password,
+            first_name=options["first"],
+            last_name=options["last"],
+        )
+
+        # ADMIN bekommt is_staff/is_superuser auch lokal — damit Break-Glass-Konten
+        # ohne Entra funktionieren.
+        if role == Role.ADMIN:
+            user.is_staff = True
+            user.is_superuser = True
+            user.save(update_fields=["is_staff", "is_superuser"])
+
+        UserProfile.objects.create(
+            user=user,
+            employee_id=options.get("employee_id") or None,
+            role=role,
+            auth_source=AuthSource.LOCAL,
+            must_change_password=not options["no_force_password_change"],
+        )
 
         self.stdout.write(self.style.SUCCESS(
-            f"Benutzer '{username}' angelegt. Initialpasswort (einmal anzeigen, dann an Nutzer übergeben):"
+            f"User '{username}' (Rolle: {role}) angelegt.\n"
+            "Initialpasswort (einmal anzeigen, dann an Nutzer übergeben):"
         ))
         self.stdout.write(self.style.WARNING(password))
+        if role == Role.ADMIN:
+            self.stdout.write(self.style.NOTICE(
+                "\nHinweis: ADMIN-Rolle wurde gesetzt → is_staff=True, is_superuser=True. "
+                "Dieses Konto hat vollen Django-Admin-Zugriff."
+            ))

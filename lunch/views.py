@@ -218,7 +218,7 @@ def my_orders(request):
 # ─── Admin: Pickup-Ansicht ──────────────────────────────────────
 
 @login_required
-@user_passes_test(_is_admin, login_url="accounts:login")
+@user_passes_test(_is_admin, login_url="account_login")
 def pickup(request):
     """Ausgabeansicht für die Kantine: heute + Filter Kantine."""
     today = timezone.localdate()
@@ -252,7 +252,7 @@ def pickup(request):
 
 
 @login_required
-@user_passes_test(_is_admin, login_url="accounts:login")
+@user_passes_test(_is_admin, login_url="account_login")
 @require_POST
 def pickup_serve(request, order_id: int):
     order = get_object_or_404(Order, pk=order_id)
@@ -266,7 +266,7 @@ def pickup_serve(request, order_id: int):
 
 
 @login_required
-@user_passes_test(_is_admin, login_url="accounts:login")
+@user_passes_test(_is_admin, login_url="account_login")
 @require_POST
 def admin_cancel_order(request, order_id: int):
     order = get_object_or_404(Order, pk=order_id)

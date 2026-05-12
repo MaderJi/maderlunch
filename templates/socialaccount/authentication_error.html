@@ -1,0 +1,31 @@
+{% extends "base/base.html" %}
+{% block title %}Anmeldung fehlgeschlagen – MaderLunch{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card border-danger">
+      <div class="card-body">
+        <h1 class="h4 text-danger">Anmeldung mit Microsoft fehlgeschlagen</h1>
+        <p>
+          Beim Anmelden mit deinem Microsoft-Konto ist ein Fehler aufgetreten.
+          Häufige Ursachen:
+        </p>
+        <ul>
+          <li>Dein Konto ist nicht für MaderLunch freigeschaltet.</li>
+          <li>Die App-Berechtigung wurde widerrufen.</li>
+          <li>Vorübergehender Fehler bei Microsoft Entra.</li>
+        </ul>
+        <p>
+          Bitte versuche es in ein paar Minuten erneut. Wenn der Fehler bestehen bleibt,
+          wende dich an die IT-Abteilung und nenne — sofern angezeigt — die untenstehende
+          Fehler-ID.
+        </p>
+        {% if auth_error %}
+          <pre class="bg-light p-2 small">{{ auth_error|escape }}</pre>
+        {% endif %}
+        <a class="btn btn-secondary" href="{% url 'account_login' %}">Zurück zur Anmeldung</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

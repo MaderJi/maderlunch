@@ -24,6 +24,7 @@ ACTIONS = {
     "user.role_change",
     "user.password_reset",
     "user.password_change_self",
+    "user.password_set",
     # Entra
     "entra.first_login",
     "entra.link",

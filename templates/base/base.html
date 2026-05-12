@@ -41,15 +41,15 @@
       </ul>
       <ul class="navbar-nav">
         {% if user.is_authenticated %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">{{ user.get_full_name|default:user.username }}</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'profile' %}">{{ user.get_full_name|default:user.username }}</a></li>
           <li class="nav-item">
-            <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+            <form method="post" action="{% url 'account_logout' %}" class="d-inline">
               {% csrf_token %}
               <button class="btn btn-link nav-link" type="submit">Abmelden</button>
             </form>
           </li>
         {% else %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Anmelden</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">Anmelden</a></li>
         {% endif %}
       </ul>
     </div>

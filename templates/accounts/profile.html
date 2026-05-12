@@ -19,7 +19,7 @@
       <dd class="col-sm-9">{{ profile.employee_id|default:"—" }}</dd>
     </dl>
     <hr>
-    <a class="btn btn-outline-secondary btn-sm" href="{% url 'accounts:password_change' %}">Passwort ändern</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'account_change_password' %}">Passwort ändern</a>
   </div>
 </div>
 {% endblock %}
