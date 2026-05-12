@@ -1,0 +1,34 @@
+{% extends "base/base.html" %}
+{% block title %}Dashboard – MaderLunch{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Heute, {{ today|date:"l, j. F Y" }}</h1>
+  <a class="btn btn-outline-primary btn-sm" href="{% url 'lunch:mealplan_week' %}">Wochenplan ansehen</a>
+</div>
+
+{% if my_today_orders %}
+  <div class="alert alert-info">
+    Deine heutigen Bestellungen:
+    <ul class="mb-0">
+      {% for o in my_today_orders %}
+        <li>{{ o.meal_slot.product.name }} ({{ o.meal_slot.mealplan.canteen }})</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+{% if not plans %}
+  <p class="text-muted">Heute liegt kein veröffentlichter Speiseplan für deinen Standort vor.</p>
+{% else %}
+  {% for plan in plans %}
+    <h2 class="h5 mt-4">{{ plan.canteen }}</h2>
+    <div class="row g-3">
+      {% for slot in plan.slots.all %}
+        {% if slot.is_active %}
+          {% include "lunch/_slot.html" with slot=slot my_order=None success="" error="" %}
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endfor %}
+{% endif %}
+{% endblock %}

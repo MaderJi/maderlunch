@@ -1,0 +1,27 @@
+<tr id="pickup-row-{{ order.pk }}" class="{% if order.status == 'served' %}served{% endif %}">
+  <td>{{ order.user_profile.user.get_full_name|default:order.user_profile.user.username }}</td>
+  <td>{{ order.user_profile.employee_id|default:"—" }}</td>
+  <td>{{ order.meal_slot.product.name }}</td>
+  <td>
+    {% if order.status == "placed" %}<span class="badge bg-success">Bestellt</span>
+    {% elif order.status == "served" %}<span class="badge bg-secondary">Ausgegeben</span>
+    {% else %}<span class="badge bg-light text-dark">Storniert</span>
+    {% endif %}
+  </td>
+  <td class="text-end">
+    {% if order.status == "placed" %}
+      <button class="btn btn-success btn-sm"
+              hx-post="{% url 'lunch:pickup_serve' order.pk %}"
+              hx-target="#pickup-row-{{ order.pk }}"
+              hx-swap="outerHTML">
+        Ausgeben
+      </button>
+      <form method="post" action="{% url 'lunch:admin_cancel_order' order.pk %}" class="d-inline ms-1"
+            onsubmit="var n=prompt('Stornogrund:'); if(!n){return false;} this.note.value=n;">
+        {% csrf_token %}
+        <input type="hidden" name="note" value="">
+        <button class="btn btn-outline-danger btn-sm" type="submit">Storno</button>
+      </form>
+    {% endif %}
+  </td>
+</tr>

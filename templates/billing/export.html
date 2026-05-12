@@ -1,0 +1,24 @@
+{% extends "base/base.html" %}
+{% block title %}CSV-Export – MaderLunch{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">CSV-Export Bestellungen</h1>
+
+<form method="get" action="{% url 'billing:export_orders' %}" class="row g-2 align-items-end" target="_blank">
+  <div class="col-auto">
+    <label class="form-label mb-0">Von</label>
+    <input type="date" name="from" value="{{ default_from }}" class="form-control form-control-sm" required>
+  </div>
+  <div class="col-auto">
+    <label class="form-label mb-0">Bis</label>
+    <input type="date" name="to" value="{{ default_to }}" class="form-control form-control-sm" required>
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-primary btn-sm">CSV herunterladen</button>
+  </div>
+</form>
+
+<p class="text-muted small mt-3">
+  Trennzeichen: Semikolon. Codierung: UTF-8 mit BOM (Excel-DE-kompatibel).
+  Schema-Version wird in der ersten Spalte mitexportiert.
+</p>
+{% endblock %}

@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: maderlunch_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: maderlunch_web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    ports:
+      # An VM-interne IP binden wenn Forti vorgelagert ist:
+      # - "10.x.x.x:8000:8000"
+      # Oder im Dev-Netz offen:
+      - "8000:8000"
+    volumes:
+      - staticfiles:/app/staticfiles
+      - ./accounts/migrations:/app/accounts/migrations
+      - ./lunch/migrations:/app/lunch/migrations
+      - ./billing/migrations:/app/billing/migrations
+      - ./audit/migrations:/app/audit/migrations
+volumes:
+  pgdata:
+  staticfiles:

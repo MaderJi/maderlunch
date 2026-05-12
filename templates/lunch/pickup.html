@@ -1,0 +1,46 @@
+{% extends "base/base.html" %}
+{% block title %}Ausgabe – MaderLunch{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Ausgabe</h1>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-auto">
+    <label class="form-label mb-0">Datum</label>
+    <input type="date" name="date" value="{{ date|date:'Y-m-d' }}" class="form-control form-control-sm">
+  </div>
+  <div class="col-auto">
+    <label class="form-label mb-0">Kantine</label>
+    <select name="canteen" class="form-select form-select-sm">
+      {% for c in canteens %}
+        <option value="{{ c.id }}" {% if selected_canteen and selected_canteen.id == c.id %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto align-self-end">
+    <button class="btn btn-primary btn-sm">Anzeigen</button>
+  </div>
+</form>
+
+{% if not orders %}
+  <p class="text-muted">Keine Bestellungen für diesen Tag/diese Kantine.</p>
+{% else %}
+<div class="table-responsive">
+  <table class="table table-sm align-middle table-pickup">
+    <thead>
+      <tr>
+        <th>Mitarbeiter</th>
+        <th>Mitarb.-Kennung</th>
+        <th>Gericht</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in orders %}
+        {% include "lunch/_pickup_row.html" with order=o %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

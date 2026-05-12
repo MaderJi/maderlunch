@@ -1,0 +1,38 @@
+{% extends "base/base.html" %}
+{% block title %}Anmelden – MaderLunch{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h4 mb-3">Anmelden</h1>
+
+        {% if form.errors %}
+          <div class="alert alert-danger">
+            Anmeldung fehlgeschlagen. Bitte Benutzername und Passwort prüfen.
+          </div>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label" for="id_username">Benutzername</label>
+            {{ form.username }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="id_password">Passwort</label>
+            {{ form.password }}
+          </div>
+          <button class="btn btn-primary w-100" type="submit">Anmelden</button>
+        </form>
+
+        <hr>
+        <p class="text-muted small mb-0">
+          Anmeldung über Microsoft-Konto wird vorbereitet und ist im aktuellen
+          Stand noch nicht aktiv.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

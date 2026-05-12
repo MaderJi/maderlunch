@@ -1,0 +1,25 @@
+{% extends "base/base.html" %}
+{% block title %}Mein Profil – MaderLunch{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Mein Profil</h1>
+<div class="card">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Name</dt>
+      <dd class="col-sm-9">{{ user.get_full_name|default:user.username }}</dd>
+      <dt class="col-sm-3">Benutzername</dt>
+      <dd class="col-sm-9">{{ user.username }}</dd>
+      <dt class="col-sm-3">E-Mail</dt>
+      <dd class="col-sm-9">{{ user.email|default:"—" }}</dd>
+      <dt class="col-sm-3">Standort</dt>
+      <dd class="col-sm-9">{{ profile.location|default:"—" }}</dd>
+      <dt class="col-sm-3">Kostenstelle</dt>
+      <dd class="col-sm-9">{{ profile.cost_center|default:"—" }}</dd>
+      <dt class="col-sm-3">Mitarbeiterkennung</dt>
+      <dd class="col-sm-9">{{ profile.employee_id|default:"—" }}</dd>
+    </dl>
+    <hr>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'accounts:password_change' %}">Passwort ändern</a>
+  </div>
+</div>
+{% endblock %}

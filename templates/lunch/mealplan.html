@@ -1,0 +1,47 @@
+{% extends "base/base.html" %}
+{% load lunch_extras %}
+{% block title %}Wochenplan – MaderLunch{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">
+    Wochenplan KW {{ monday|date:"W" }}
+    ({{ monday|date:"d.m." }} – {{ week_days|last|date:"d.m.Y" }})
+  </h1>
+  <div>
+    <a class="btn btn-outline-secondary btn-sm"
+       href="?week={{ prev_week }}{% if selected_canteen %}&canteen={{ selected_canteen.id }}{% endif %}">← Woche</a>
+    <a class="btn btn-outline-secondary btn-sm"
+       href="?week={{ next_week }}{% if selected_canteen %}&canteen={{ selected_canteen.id }}{% endif %}">Woche →</a>
+  </div>
+</div>
+
+{% if canteens|length > 1 %}
+  <form method="get" class="mb-4">
+    <input type="hidden" name="week" value="{{ monday|date:'Y-m-d' }}">
+    <div class="d-flex gap-2 align-items-center">
+      <label class="form-label mb-0">Kantine:</label>
+      <select name="canteen" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+        <option value="">Alle</option>
+        {% for c in canteens %}
+          <option value="{{ c.id }}" {% if selected_canteen and selected_canteen.id == c.id %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+{% endif %}
+
+{% for day in week_days %}
+  <h2 class="h5 mt-4">{{ day|date:"l, j. F" }}</h2>
+  {% with day_slots=slots_by_day|dict_get:day %}
+    {% if day_slots %}
+      <div class="row g-3">
+        {% for slot in day_slots %}
+          {% include "lunch/_slot.html" with slot=slot my_order=my_orders_by_slot|dict_get:slot.pk success="" error="" %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-muted small">Kein Speiseplan veröffentlicht.</p>
+    {% endif %}
+  {% endwith %}
+{% endfor %}
+{% endblock %}

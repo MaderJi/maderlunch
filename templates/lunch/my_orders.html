@@ -1,0 +1,55 @@
+{% extends "base/base.html" %}
+{% block title %}Meine Bestellungen – MaderLunch{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Meine Bestellungen</h1>
+
+{% if not orders %}
+  <p class="text-muted">Du hast bisher keine Bestellungen.</p>
+{% else %}
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th>Kantine</th>
+        <th>Gericht</th>
+        <th class="text-end">Brutto</th>
+        <th class="text-end">Zuschuss</th>
+        <th class="text-end">Eigenanteil</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in orders %}
+        <tr>
+          <td>{{ o.meal_slot.mealplan.serving_date|date:"d.m.Y" }}</td>
+          <td>{{ o.meal_slot.mealplan.canteen }}</td>
+          <td>{{ o.meal_slot.product.name }}</td>
+          <td class="text-end">{{ o.unit_price_gross }} €</td>
+          <td class="text-end">−{{ o.subsidy_amount }} €</td>
+          <td class="text-end fw-semibold">{{ o.net_to_employee }} €</td>
+          <td>
+            {% if o.status == "placed" %}<span class="badge bg-success">Bestellt</span>
+            {% elif o.status == "served" %}<span class="badge bg-secondary">Ausgegeben</span>
+            {% else %}<span class="badge bg-light text-dark">Storniert</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if o.status == "placed" %}
+              <form method="post" action="{% url 'lunch:order_cancel' o.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-outline-danger btn-sm" type="submit"
+                        onclick="return confirm('Bestellung wirklich stornieren?');">
+                  Stornieren
+                </button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
