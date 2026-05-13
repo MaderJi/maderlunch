@@ -15,7 +15,7 @@ def _is_admin(user):
 
 
 @login_required
-@user_passes_test(_is_admin, login_url="accounts:login")
+@user_passes_test(_is_admin, login_url="account_login")
 def export_form(request):
     today = date.today()
     default_from = (today - timedelta(days=30)).isoformat()
@@ -27,7 +27,7 @@ def export_form(request):
 
 
 @login_required
-@user_passes_test(_is_admin, login_url="accounts:login")
+@user_passes_test(_is_admin, login_url="account_login")
 def export_orders(request):
     try:
         d_from = datetime.fromisoformat(request.GET["from"]).date()

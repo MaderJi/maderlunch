@@ -1,0 +1,61 @@
+{% extends "base/base.html" %}
+{% load socialaccount %}
+{% load static %}
+
+{% block title %}Anmelden – MaderLunch{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+  <div class="login-card">
+    <img src="{% static 'img/logo-maderlunch.svg' %}" alt="MaderLunch" class="login-logo">
+
+    <h1 class="login-title">Willkommen bei MaderLunch</h1>
+    <p class="login-subtitle">Bitte melde dich mit deinem Mader-Konto an.</p>
+
+    {% if form.errors or form.non_field_errors %}
+      <div class="alert alert-danger" role="alert">
+        Anmeldung fehlgeschlagen. Bitte prüfe deine Eingaben.
+      </div>
+    {% endif %}
+
+    {% get_providers as socialaccount_providers %}
+    {% if socialaccount_providers %}
+      {% for provider in socialaccount_providers %}
+        {% if provider.id == "microsoft" %}
+          <a class="btn btn-microsoft" href="{% provider_login_url provider.id process='login' %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21" aria-hidden="true">
+              <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+              <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+              <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+              <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+            </svg>
+            <span>Mit Microsoft-Konto anmelden</span>
+          </a>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <div class="login-divider">
+      <span>oder lokaler Login</span>
+    </div>
+
+    <form method="post" action="{% url 'account_login' %}">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="id_login" class="form-label">Benutzername oder E-Mail</label>
+        <input type="text" name="login" id="id_login" class="form-control" autocomplete="username" required>
+      </div>
+      <div class="mb-3">
+        <label for="id_password" class="form-label">Passwort</label>
+        <input type="password" name="password" id="id_password" class="form-control" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Anmelden</button>
+    </form>
+
+    <p class="local-login-hint">
+      Der lokale Login ist nur aus dem internen Admin-Netz möglich.<br>
+      Mitarbeiter melden sich bitte über Microsoft an.
+    </p>
+  </div>
+</div>
+{% endblock %}

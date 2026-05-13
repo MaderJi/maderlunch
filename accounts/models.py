@@ -3,10 +3,23 @@
 Bewusste Entscheidung:
 - Wir benutzen Djangos auth.User unverändert (keine Custom-User-Subklasse),
   weil UserProfile ohnehin alle Mader-spezifischen Felder kapselt.
-- Eine spätere Migration auf Custom User wäre teurer als der hier vermiedene Komfort.
+- Rollen werden hier als role-Feld am UserProfile gepflegt, hierarchisch:
+  USER < MANAGER < ADMIN.
+- auth_source dokumentiert, ob ein Account lokal oder via Entra angelegt wurde.
 """
 from django.conf import settings
 from django.db import models
+
+
+class Role(models.TextChoices):
+    USER = "USER", "User"
+    MANAGER = "MANAGER", "Manager"
+    ADMIN = "ADMIN", "Admin"
+
+
+class AuthSource(models.TextChoices):
+    LOCAL = "LOCAL", "Lokal"
+    ENTRA = "ENTRA", "Entra"
 
 
 class UserProfile(models.Model):
@@ -33,6 +46,22 @@ class UserProfile(models.Model):
         related_name="user_profiles",
         verbose_name="Kostenstelle",
     )
+    role = models.CharField(
+        "Rolle",
+        max_length=10,
+        choices=Role.choices,
+        default=Role.USER,
+        help_text=(
+            "Rolle in MaderLunch. Bei Entra-Logins wird die Rolle bei jedem Login "
+            "aus dem 'roles'-Claim des ID-Tokens neu gesetzt."
+        ),
+    )
+    auth_source = models.CharField(
+        "Anmeldequelle",
+        max_length=10,
+        choices=AuthSource.choices,
+        default=AuthSource.LOCAL,
+    )
     must_change_password = models.BooleanField(
         "Passwortänderung erforderlich",
         default=False,
@@ -49,20 +78,52 @@ class UserProfile(models.Model):
     def __str__(self) -> str:
         return f"{self.user.get_full_name() or self.user.username}"
 
+    # --- Hierarchie-Helper ---
+    # Die Properties spiegeln die Rollen-Hierarchie:
+    # ADMIN kann alles, was MANAGER kann; MANAGER kann alles, was USER kann.
+
+    @property
+    def is_manager(self) -> bool:
+        """True für MANAGER und ADMIN."""
+        return self.role in (Role.MANAGER, Role.ADMIN)
+
+    @property
+    def is_app_admin(self) -> bool:
+        """True nur für ADMIN.
+
+        Bewusst nicht 'is_admin' genannt, um Verwechslung mit Djangos
+        is_staff/is_superuser zu vermeiden.
+        """
+        return self.role == Role.ADMIN
+
 
 class EntraIdentity(models.Model):
     """Verknüpfung lokales UserProfile <-> Entra-Identität.
 
-    Stabile Schlüssel: tenant_id + object_id. UPN/E-Mail ist informativ.
+    Wird im Auth-Adapter beim ersten Entra-Login befüllt und bei späteren
+    Logins aktualisiert (last_login_at, ggf. upn falls geändert).
     """
     profile = models.OneToOneField(
         UserProfile,
         on_delete=models.CASCADE,
         related_name="entra_identity",
     )
-    tenant_id = models.CharField("Entra Tenant-ID", max_length=64)
-    object_id = models.CharField("Entra Object-ID", max_length=64)
-    upn_at_link = models.EmailField("UPN beim Verknüpfen", blank=True)
+    tenant_id = models.CharField("Tenant ID", max_length=64)
+    object_id = models.CharField(
+        "Entra Object ID (oid)",
+        max_length=64,
+        help_text="Eindeutige, unveränderliche User-ID im Tenant.",
+    )
+    upn_at_link = models.CharField(
+        "UPN bei Verknüpfung",
+        max_length=254,
+        help_text="UPN/E-Mail zum Zeitpunkt der ersten Verknüpfung. Nur zu Audit-Zwecken.",
+    )
+    last_roles_claim = models.JSONField(
+        "Letzte Rollen aus Token",
+        default=list, blank=True,
+        help_text="Roh-Inhalt des 'roles'-Claims beim letzten Login. Für Debugging.",
+    )
     linked_at = models.DateTimeField(auto_now_add=True)
     last_login_at = models.DateTimeField(null=True, blank=True)
 
@@ -75,28 +136,5 @@ class EntraIdentity(models.Model):
                 name="uniq_entra_tenant_object",
             ),
         ]
-
     def __str__(self) -> str:
-        return f"{self.profile.user.username} ({self.upn_at_link})"
-
-
-class EntraGroupMapping(models.Model):
-    """Optional: Mapping Entra-Group-Object-ID -> Django-Group.
-
-    Im MVP nicht aktiv ausgewertet — Tabelle existiert für Phase 2/3.
-    """
-    entra_group_object_id = models.CharField("Entra Group Object-ID", max_length=64, unique=True)
-    django_group = models.ForeignKey(
-        "auth.Group",
-        on_delete=models.CASCADE,
-        related_name="entra_mappings",
-    )
-    is_active = models.BooleanField(default=True)
-    note = models.CharField(max_length=200, blank=True)
-
-    class Meta:
-        verbose_name = "Entra-Gruppen-Mapping"
-        verbose_name_plural = "Entra-Gruppen-Mappings"
-
-    def __str__(self) -> str:
-        return f"{self.entra_group_object_id} → {self.django_group.name}"
+        return f"Entra: {self.upn_at_link} → {self.profile}"

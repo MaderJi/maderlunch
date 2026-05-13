@@ -1,26 +1,28 @@
+"""MaderLunch URL-Konfiguration.
+
+AUTH-PATCH 2026-05:
+- /accounts/* wird komplett von django-allauth bedient
+  (Login, Logout, Microsoft-Login, Passwortwechsel)
+- /accounts/profile/ ist eine Mader-spezifische View (siehe accounts/views.py)
+- accounts/urls.py existiert nicht mehr
+"""
 from django.contrib import admin
 from django.urls import include, path
-from django.http import JsonResponse
-from django.db import connection
 
-
-def healthz(request):
-    db_ok = "ok"
-    try:
-        with connection.cursor() as cur:
-            cur.execute("SELECT 1")
-            cur.fetchone()
-    except Exception:  # noqa: BLE001
-        db_ok = "fail"
-    status = 200 if db_ok == "ok" else 503
-    return JsonResponse({"status": "ok" if db_ok == "ok" else "degraded", "db": db_ok}, status=status)
-
+from accounts import views as accounts_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("healthz/", healthz, name="healthz"),
-    path("accounts/", include("accounts.urls")),
+
+    # AUTH-PATCH: allauth übernimmt /accounts/login/, /logout/, /password/change/,
+    # /microsoft/login/, /microsoft/login/callback/ etc.
+    path("accounts/", include("allauth.urls")),
+
+    # Mader-spezifische Account-View — bewusst NACH allauth-Include,
+    # damit allauth seine eigenen URLs registriert und wir nur 'profile/' draufpacken.
+    path("accounts/profile/", accounts_views.profile, name="profile"),
+
+    # MaderLunch-eigene Apps
+    path("", include("lunch.urls")),
     path("billing/", include("billing.urls")),
-    path("", include("lunch.urls")),  # Dashboard auf "/"
-    # path("oidc/", include("mozilla_django_oidc.urls")),  # Phase 2
 ]

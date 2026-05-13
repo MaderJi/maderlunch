@@ -14,9 +14,9 @@ def _allowed_named_views(request):
     """Pfade, die wir per reverse auflösen — robust gegen URL-Änderungen."""
     paths = []
     for name in (
-        "accounts:password_change",
-        "accounts:password_change_done",
-        "accounts:logout",
+        "account_change_password",
+        "account_change_password",
+        "account_logout",
     ):
         try:
             paths.append(reverse(name))
@@ -43,5 +43,5 @@ class ForcePasswordChangeMiddleware:
                     request.path in allowed
                     or any(request.path.startswith(p) for p in _ALLOWED_PATH_PREFIXES)
                 ):
-                    return redirect("accounts:password_change")
+                    return redirect("account_change_password")
         return self.get_response(request)

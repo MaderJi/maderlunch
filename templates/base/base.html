@@ -1,25 +1,30 @@
 {% load django_htmx %}
+{% load static %}
 <!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="theme-color" content="#009fe3">
   <title>{% block title %}MaderLunch{% endblock %}</title>
+
+  <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { background: #f7f7f9; }
-    .navbar-brand { font-weight: 600; }
-    .meal-card { min-height: 180px; }
-    .badge-soft { background:#eef; color:#446; font-weight:500; }
-    .table-pickup tr.served td { color: #888; text-decoration: line-through; }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="{% static 'css/mader.css' %}" rel="stylesheet">
 </head>
 <body>
-<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+<nav class="navbar navbar-expand-md navbar-mader mb-4">
   <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'lunch:dashboard' %}">MaderLunch</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+    <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'lunch:dashboard' %}{% else %}/{% endif %}">
+      <img src="{% static 'img/logo-mark.svg' %}" alt="" aria-hidden="true">
+      <span>MaderLunch</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"
+            aria-controls="nav" aria-expanded="false" aria-label="Navigation umschalten">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div id="nav" class="collapse navbar-collapse">
@@ -28,28 +33,32 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'lunch:dashboard' %}">Dashboard</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'lunch:mealplan_week' %}">Speiseplan</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'lunch:my_orders' %}">Meine Bestellungen</a></li>
-          {% if perms or user.groups.all %}
-            {% for g in user.groups.all %}
-              {% if g.name == "Admin" %}
-                <li class="nav-item"><a class="nav-link" href="{% url 'lunch:pickup' %}">Ausgabe</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'billing:export_form' %}">Export</a></li>
-                <li class="nav-item"><a class="nav-link" href="/admin/">Verwaltung</a></li>
-              {% endif %}
-            {% endfor %}
+          {% if user.profile.is_manager %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'lunch:pickup' %}">Ausgabe</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'billing:export_form' %}">Export</a></li>
+          {% endif %}
+          {% if user.profile.is_app_admin %}
+            <li class="nav-item"><a class="nav-link" href="/admin/">Verwaltung</a></li>
           {% endif %}
         {% endif %}
       </ul>
       <ul class="navbar-nav">
         {% if user.is_authenticated %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">{{ user.get_full_name|default:user.username }}</a></li>
           <li class="nav-item">
-            <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+            <a class="nav-link" href="{% url 'profile' %}">
+              <i class="bi bi-person-circle me-1"></i>{{ user.get_full_name|default:user.username }}
+            </a>
+          </li>
+          <li class="nav-item">
+            <form method="post" action="{% url 'account_logout' %}" class="d-inline">
               {% csrf_token %}
-              <button class="btn btn-link nav-link" type="submit">Abmelden</button>
+              <button class="btn btn-link nav-link" type="submit">
+                <i class="bi bi-box-arrow-right me-1"></i>Abmelden
+              </button>
             </form>
           </li>
         {% else %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Anmelden</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">Anmelden</a></li>
         {% endif %}
       </ul>
     </div>
@@ -61,16 +70,46 @@
     {% for msg in messages %}
       <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show" role="alert">
         {{ msg }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
       </div>
     {% endfor %}
   {% endif %}
-
   {% block content %}{% endblock %}
 </main>
 
-<footer class="text-center text-muted small mt-5 mb-3">
-  MaderLunch — interne App der Mader GmbH &amp; Co. KG.
+<footer class="mader-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="brand-row">
+          <img src="{% static 'img/logo-mark.svg' %}" alt="MaderLunch">
+          <div>
+            <div class="brand-title">MaderLunch</div>
+            <div class="tagline">Luft ist unser Antrieb</div>
+          </div>
+        </div>
+        <div>
+          Interne Anwendung der Mader GmbH &amp; Co.&nbsp;KG.<br>
+          Bei Fragen oder Problemen: <a href="mailto:it@mader.eu">it@mader.eu</a>
+        </div>
+      </div>
+      <div class="col-md-6 mt-3 mt-md-0">
+        <strong>Mader GmbH &amp; Co. KG</strong><br>
+        Brühlhofstr. 5<br>
+        70771 Leinfelden-Echterdingen<br>
+        Telefon <a href="tel:+4971179720">+49 711 - 7972 0</a><br>
+        E-Mail <a href="mailto:info@mader.eu">info@mader.eu</a>
+      </div>
+    </div>
+    <hr>
+    <div class="legal d-flex flex-wrap justify-content-between gap-2">
+      <span>&copy; {% now "Y" %} Mader GmbH &amp; Co. KG</span>
+      <span>
+        <a href="https://www.mader.eu/impressum">Impressum</a> &middot;
+        <a href="https://www.mader.eu/datenschutz">Datenschutz</a>
+      </span>
+    </div>
+  </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

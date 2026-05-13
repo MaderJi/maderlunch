@@ -1,0 +1,362 @@
+/* ====================================================================
+   MaderLunch — Mader Corporate Design (B2B-Style)
+   --------------------------------------------------------------------
+   Pattern: Dark Header/Footer + light Content-Body
+   Akzentfarbe: Mader-Blau (#009fe3)
+   ==================================================================== */
+
+:root {
+  /* Mader Brand */
+  --mader-blue: #009fe3;
+  --mader-blue-bright: #1bb4f5;
+  --mader-blue-dark: #0083bd;
+  --mader-blue-darker: #006a99;
+  --mader-blue-soft: #e6f6fc;
+
+  /* Dark-Surface (Header/Footer) */
+  --surface-dark: #1c2733;
+  --surface-dark-2: #243140;
+  --surface-dark-border: rgba(255, 255, 255, 0.08);
+  --on-dark: #f1f5f9;
+  --on-dark-muted: #94a3b8;
+  --on-dark-faint: #64748b;
+
+  /* Light-Surface (Content) */
+  --surface: #ffffff;
+  --surface-2: #f7fafc;
+  --surface-3: #edf2f7;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e0;
+  --on-surface: #1a202c;
+  --on-surface-muted: #4a5568;
+  --on-surface-faint: #718096;
+
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Bootstrap-Override: Primary = Mader-Blau ---- */
+.btn-primary {
+  --bs-btn-bg: var(--mader-blue);
+  --bs-btn-border-color: var(--mader-blue);
+  --bs-btn-hover-bg: var(--mader-blue-dark);
+  --bs-btn-hover-border-color: var(--mader-blue-dark);
+  --bs-btn-active-bg: var(--mader-blue-darker);
+  --bs-btn-active-border-color: var(--mader-blue-darker);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--mader-blue);
+  --bs-btn-border-color: var(--mader-blue);
+  --bs-btn-hover-bg: var(--mader-blue);
+  --bs-btn-hover-border-color: var(--mader-blue);
+  --bs-btn-active-bg: var(--mader-blue-dark);
+  --bs-btn-active-border-color: var(--mader-blue-dark);
+}
+
+.text-primary { color: var(--mader-blue) !important; }
+.bg-primary { background-color: var(--mader-blue) !important; }
+.border-primary { border-color: var(--mader-blue) !important; }
+
+/* ---- Body: Sticky-Footer-Layout ---- */
+html, body { height: 100%; }
+body {
+  background: var(--surface-2);
+  color: var(--on-surface);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+main.container, main.container-fluid {
+  flex: 1 0 auto;
+  padding-top: 1.5rem;
+  padding-bottom: 3rem;
+}
+
+a {
+  color: var(--mader-blue);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--mader-blue-dark);
+  text-decoration: underline;
+}
+
+/* ====================================================================
+   Navbar (Dark)
+   ==================================================================== */
+.navbar-mader {
+  background: var(--surface-dark);
+  border-bottom: 1px solid var(--surface-dark-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 0.65rem 0;
+  margin-bottom: 0 !important;
+}
+.navbar-mader .navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--on-dark);
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.2px;
+  margin-right: 1.5rem;
+}
+.navbar-mader .navbar-brand:hover {
+  color: var(--on-dark);
+  text-decoration: none;
+}
+.navbar-mader .navbar-brand img {
+  height: 36px;
+  width: 36px;
+}
+.navbar-mader .nav-link {
+  color: var(--on-dark-muted);
+  font-weight: 500;
+  font-size: 0.94rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.navbar-mader .nav-link:hover,
+.navbar-mader .nav-link:focus {
+  color: var(--on-dark);
+  background: rgba(255, 255, 255, 0.05);
+}
+.navbar-mader .nav-link.active {
+  color: var(--mader-blue-bright);
+  background: rgba(0, 159, 227, 0.12);
+}
+.navbar-mader .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.3);
+  padding: 0.25rem 0.55rem;
+}
+.navbar-mader .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255, 255, 255, 0.85)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+.navbar-mader .btn-link.nav-link {
+  border: none;
+  background: transparent;
+  text-decoration: none;
+}
+
+/* ====================================================================
+   Footer (Dark, sticky am unteren Rand)
+   ==================================================================== */
+.mader-footer {
+  background: var(--surface-dark);
+  color: var(--on-dark-muted);
+  padding: 2.5rem 0 1.25rem;
+  margin-top: auto;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  border-top: 1px solid var(--surface-dark-border);
+}
+.mader-footer a {
+  color: var(--on-dark-muted);
+  text-decoration: none;
+}
+.mader-footer a:hover {
+  color: var(--mader-blue-bright);
+  text-decoration: underline;
+}
+.mader-footer .brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+.mader-footer .brand-row img {
+  height: 42px;
+  width: 42px;
+}
+.mader-footer .brand-row .brand-title {
+  color: var(--on-dark);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.mader-footer .tagline {
+  color: var(--mader-blue-bright);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-top: 0.15rem;
+}
+.mader-footer strong {
+  color: var(--on-dark);
+}
+.mader-footer hr {
+  border-color: var(--surface-dark-border);
+  margin: 1.5rem 0 1rem;
+}
+.mader-footer .legal {
+  font-size: 0.825rem;
+  color: var(--on-dark-faint);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* ====================================================================
+   Cards & Komponenten (Content-Bereich, hell)
+   ==================================================================== */
+.card, .meal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.meal-card {
+  min-height: 180px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.meal-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.badge-soft {
+  background: var(--mader-blue-soft);
+  color: var(--mader-blue-darker);
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+  border-radius: var(--radius-sm);
+}
+
+.table-pickup tr.served td {
+  color: var(--on-surface-faint);
+  text-decoration: line-through;
+}
+.table thead th {
+  background: var(--surface-3);
+  color: var(--on-surface);
+  font-weight: 600;
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.btn {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.alert-info {
+  background: var(--mader-blue-soft);
+  border-color: var(--mader-blue-bright);
+  color: var(--mader-blue-darker);
+}
+
+/* ====================================================================
+   Login-Seite
+   ==================================================================== */
+.login-wrapper {
+  max-width: 440px;
+  margin: 3rem auto;
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 2.5rem 2rem;
+}
+.login-logo {
+  display: block;
+  margin: 0 auto 1.5rem;
+  width: 96px;
+  height: 96px;
+  border-radius: 18px;
+}
+.login-title {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin-bottom: 0.4rem;
+}
+.login-subtitle {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--on-surface-muted);
+  margin-bottom: 1.75rem;
+}
+.btn-microsoft {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: var(--surface-dark);
+  color: var(--on-dark);
+  border: 1px solid var(--surface-dark);
+  font-weight: 500;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  font-size: 0.98rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn-microsoft:hover,
+.btn-microsoft:focus {
+  background: #0f1820;
+  border-color: #0f1820;
+  color: var(--on-dark);
+  text-decoration: none;
+}
+.btn-microsoft svg { flex: 0 0 auto; }
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--on-surface-muted);
+  font-size: 0.8rem;
+  margin: 1.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.local-login-hint {
+  font-size: 0.85rem;
+  color: var(--on-surface-muted);
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* ====================================================================
+   Wochen-Navigation
+   ==================================================================== */
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.week-nav .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ====================================================================
+   Mobile
+   ==================================================================== */
+@media (max-width: 767.98px) {
+  .navbar-mader .navbar-brand { font-size: 1rem; }
+  .navbar-mader .navbar-brand img { height: 30px; width: 30px; }
+  .login-card { padding: 1.75rem 1.25rem; margin: 1rem; }
+  .mader-footer .legal { flex-direction: column; align-items: flex-start; }
+}
