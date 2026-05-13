@@ -71,23 +71,23 @@ SITE_ID = 1  # AUTH-PATCH: für allauth Pflicht
 
 
 # ─── Middleware ─────────────────────────────────────────────────
+
 MIDDLEWARE = [
+    "accounts.middleware_force_https.ForceHttpsForKnownHostsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "accounts.middleware_restrict_local_login.RestrictLocalLoginMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
     # AUTH-PATCH: allauth Middleware
     "allauth.account.middleware.AccountMiddleware",
 ]
-
 
 # ─── URLs / Templates / WSGI ────────────────────────────────────
 ROOT_URLCONF = "config.urls"
@@ -163,13 +163,22 @@ SOCIALACCOUNT_PROVIDERS = {
                 },
             },
         ],
-	"SCOPE": ["User.Read", "GroupMember.Read.All", "openid", "profile", "email"],
+    "SCOPE": ["User.Read", "GroupMember.Read.All", "openid", "profile", "email"],
         "AUTH_PARAMS": {
             "prompt": "select_account",
         },
     },
 }
 
+# ─── Login-Härtung ──────────────────────────────────────────────
+# Lokaler Login (Username/Passwort) ist nur aus diesen Subnetzen erreichbar.
+# Alle anderen Source-IPs werden auf den Microsoft-Login umgeleitet.
+# Funktioniert nur, wenn die Middleware RestrictLocalLoginMiddleware aktiv ist.
+
+LOCAL_LOGIN_ALLOWED_NETWORKS = [
+    "10.75.0.0/21",   # Server-Admin-Workstations (MALE-SRVMGMT)
+    "127.0.0.0/8",    # Container-internal (Health-Checks, etc.)
+]
 
 # ─── Internationalization ───────────────────────────────────────
 LANGUAGE_CODE = "de-de"
@@ -181,6 +190,7 @@ USE_TZ = True
 # ─── Static / Media ─────────────────────────────────────────────
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
@@ -206,3 +216,7 @@ LOGGING = {
         "allauth": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
+
+FORCE_SCHEME_HTTPS_FOR_HOSTS = [
+    "lunch.mader.eu",
+]

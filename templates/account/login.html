@@ -1,57 +1,60 @@
 {% extends "base/base.html" %}
 {% load socialaccount %}
+{% load static %}
+
 {% block title %}Anmelden – MaderLunch{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-5">
-    <div class="card shadow-sm">
-      <div class="card-body p-4">
-        <h1 class="h4 mb-3 text-center">MaderLunch — Anmelden</h1>
+<div class="login-wrapper">
+  <div class="login-card">
+    <img src="{% static 'img/logo-maderlunch.svg' %}" alt="MaderLunch" class="login-logo">
 
-        {# --- Microsoft / Entra Login (primärer Weg für Mader-Mitarbeiter) --- #}
-        <div class="d-grid mb-4">
-          <a class="btn btn-primary btn-lg" href="{% provider_login_url 'microsoft' %}">
-            <span class="me-2">🪟</span>
-            Mit Microsoft-Konto anmelden
-          </a>
-          <small class="text-muted text-center mt-1">
-            Empfohlen für Mader-Mitarbeiter.
-          </small>
-        </div>
+    <h1 class="login-title">Willkommen bei MaderLunch</h1>
+    <p class="login-subtitle">Bitte melde dich mit deinem Mader-Konto an.</p>
 
-        <div class="d-flex align-items-center my-3">
-          <hr class="flex-grow-1">
-          <span class="px-2 text-muted small">oder lokal</span>
-          <hr class="flex-grow-1">
-        </div>
-
-        {# --- Lokaler Login (für Aushilfen, Break-Glass) --- #}
-        <form method="post" action="{% url 'account_login' %}">
-          {% csrf_token %}
-          {% if form.errors %}
-            <div class="alert alert-danger small">
-              Anmeldung fehlgeschlagen. Bitte prüfe Benutzername und Passwort.
-            </div>
-          {% endif %}
-          <div class="mb-3">
-            <label for="id_login" class="form-label">Benutzername oder E-Mail</label>
-            <input type="text" name="login" id="id_login" class="form-control" required autofocus>
-          </div>
-          <div class="mb-3">
-            <label for="id_password" class="form-label">Passwort</label>
-            <input type="password" name="password" id="id_password" class="form-control" required>
-          </div>
-          {% if redirect_field_value %}
-            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
-          {% endif %}
-          <div class="d-grid">
-            <button type="submit" class="btn btn-outline-secondary">Anmelden</button>
-          </div>
-        </form>
+    {% if form.errors or form.non_field_errors %}
+      <div class="alert alert-danger" role="alert">
+        Anmeldung fehlgeschlagen. Bitte prüfe deine Eingaben.
       </div>
+    {% endif %}
+
+    {% get_providers as socialaccount_providers %}
+    {% if socialaccount_providers %}
+      {% for provider in socialaccount_providers %}
+        {% if provider.id == "microsoft" %}
+          <a class="btn btn-microsoft" href="{% provider_login_url provider.id process='login' %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21" aria-hidden="true">
+              <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+              <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+              <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+              <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+            </svg>
+            <span>Mit Microsoft-Konto anmelden</span>
+          </a>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <div class="login-divider">
+      <span>oder lokaler Login</span>
     </div>
-    <p class="text-center mt-3 small text-muted">
-      Probleme beim Anmelden? Wende dich an die IT-Abteilung.
+
+    <form method="post" action="{% url 'account_login' %}">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="id_login" class="form-label">Benutzername oder E-Mail</label>
+        <input type="text" name="login" id="id_login" class="form-control" autocomplete="username" required>
+      </div>
+      <div class="mb-3">
+        <label for="id_password" class="form-label">Passwort</label>
+        <input type="password" name="password" id="id_password" class="form-control" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Anmelden</button>
+    </form>
+
+    <p class="local-login-hint">
+      Der lokale Login ist nur aus dem internen Admin-Netz möglich.<br>
+      Mitarbeiter melden sich bitte über Microsoft an.
     </p>
   </div>
 </div>
