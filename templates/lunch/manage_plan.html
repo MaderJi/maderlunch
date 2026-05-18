@@ -1,0 +1,212 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Speiseplan verwalten – MaderLunch{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+  <div>
+    <h1 class="h4 mb-1">Speiseplan verwalten</h1>
+    <div class="text-secondary small">
+      KW {{ week_num }} &middot; {{ week_start|date:"d.m.Y" }} – {{ week_end|date:"d.m.Y" }}
+    </div>
+  </div>
+  <div class="week-nav">
+    <a class="btn btn-sm btn-outline-secondary" href="?week={{ prev_week }}">
+      <i class="bi bi-chevron-left"></i> Vorherige Woche
+    </a>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'lunch:manage_plan' %}">
+      Aktuelle Woche
+    </a>
+    <a class="btn btn-sm btn-outline-secondary" href="?week={{ next_week }}">
+      Nächste Woche <i class="bi bi-chevron-right"></i>
+    </a>
+  </div>
+</div>
+
+{% for day in days %}
+<section class="mb-4">
+  <h2 class="h5 mt-4 mb-2">
+    {{ day.date|date:"l, d. F Y" }}
+    {% if day.date == today %}<span class="badge badge-soft ms-2">Heute</span>{% endif %}
+  </h2>
+
+  {% for entry in day.entries %}
+  {% with day_key=day.date|date:"Ymd" canteen_key=entry.canteen.id %}
+  <div class="card mb-3">
+    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div>
+        <strong>{{ entry.canteen.name }}</strong>
+        <span class="text-secondary small">({{ entry.canteen.location.name }})</span>
+        {% if entry.plan and entry.plan.is_published %}
+          <span class="badge text-bg-success ms-2">Veröffentlicht</span>
+        {% else %}
+          <span class="badge text-bg-secondary ms-2">Entwurf</span>
+        {% endif %}
+      </div>
+      {% if entry.slots %}
+      <form method="post" action="{% url 'lunch:toggle_publish_day' %}" class="m-0">
+        {% csrf_token %}
+        <input type="hidden" name="serving_date" value="{{ day.date|date:'Y-m-d' }}">
+        <input type="hidden" name="canteen_id" value="{{ entry.canteen.id }}">
+        <input type="hidden" name="week" value="{{ week_start|date:'Y-m-d' }}">
+        {% if entry.plan and entry.plan.is_published %}
+          <input type="hidden" name="publish_action" value="unpublish">
+          <button class="btn btn-sm btn-outline-warning" type="submit">
+            <i class="bi bi-eye-slash me-1"></i>Zurückziehen
+          </button>
+        {% else %}
+          <input type="hidden" name="publish_action" value="publish">
+          <button class="btn btn-sm btn-primary" type="submit">
+            <i class="bi bi-megaphone me-1"></i>Veröffentlichen
+          </button>
+        {% endif %}
+      </form>
+      {% endif %}
+    </div>
+
+    <div class="card-body">
+      {% if entry.slots %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-3">
+            <thead>
+              <tr>
+                <th>Gericht</th>
+                <th>Kategorie</th>
+                <th class="text-end">Preis</th>
+                <th class="text-end">Kontingent</th>
+                <th class="text-end">Ausgegeben</th>
+                <th>Status</th>
+                <th class="text-end">Aktionen</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for slot in entry.slots %}
+              <tr {% if not slot.is_active %}class="text-secondary"{% endif %}>
+                <td>{{ slot.product.name }}</td>
+                <td>{{ slot.product.category.name }}</td>
+                <td class="text-end">{{ slot.effective_price|floatformat:2 }} €</td>
+                <td class="text-end">{{ slot.available_qty|default:"–" }}</td>
+                <td class="text-end">{{ slot.served_count }}</td>
+                <td>
+                  {% if slot.is_active %}
+                    <span class="badge text-bg-success">Aktiv</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Inaktiv</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <form method="post" action="{% url 'lunch:toggle_slot_active' slot.id %}" class="d-inline m-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="week" value="{{ week_start|date:'Y-m-d' }}">
+                    {% if slot.is_active %}
+                      <button class="btn btn-sm btn-outline-secondary" type="submit" title="Deaktivieren">
+                        <i class="bi bi-eye-slash"></i>
+                      </button>
+                    {% else %}
+                      <button class="btn btn-sm btn-outline-success" type="submit" title="Aktivieren">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                    {% endif %}
+                  </form>
+                  <form method="post" action="{% url 'lunch:delete_slot' slot.id %}" class="d-inline m-0"
+                        onsubmit="return confirm('„{{ slot.product.name|escapejs }}\u201c wirklich entfernen?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="week" value="{{ week_start|date:'Y-m-d' }}">
+                    <button class="btn btn-sm btn-outline-danger" type="submit" title="Entfernen">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-secondary small mb-3">Noch kein Gericht hinterlegt.</div>
+      {% endif %}
+
+      <form method="post" action="{% url 'lunch:manage_plan' %}?week={{ week_start|date:'Y-m-d' }}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_slot">
+        <input type="hidden" name="serving_date" value="{{ day.date|date:'Y-m-d' }}">
+        <input type="hidden" name="canteen_id" value="{{ entry.canteen.id }}">
+
+        <div class="row g-2 align-items-end">
+          <div class="col-12 col-md-5">
+            <label class="form-label form-label-sm mb-1">
+              Gericht hinzufügen
+              <button type="button" class="btn btn-sm btn-link p-0 ms-2"
+                      data-bs-toggle="modal"
+                      data-bs-target="#quickAddModal-{{ day_key }}-{{ canteen_key }}">
+                <i class="bi bi-plus-lg"></i> Neues Gericht anlegen
+              </button>
+            </label>
+            {{ entry.slot_form.product }}
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label form-label-sm mb-1">Preis (€)</label>
+            {{ entry.slot_form.price_override }}
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label form-label-sm mb-1">Kontingent</label>
+            {{ entry.slot_form.available_qty }}
+          </div>
+          <div class="col-12 col-md-3 text-end">
+            <button class="btn btn-sm btn-primary w-100" type="submit">
+              <i class="bi bi-plus-lg me-1"></i>Zum Plan hinzufügen
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Quick-Add-Modal: neues Gericht anlegen und direkt eintragen -->
+  <div class="modal fade" id="quickAddModal-{{ day_key }}-{{ canteen_key }}" tabindex="-1"
+       aria-labelledby="quickAddLabel-{{ day_key }}-{{ canteen_key }}" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="post" action="{% url 'lunch:manage_plan' %}?week={{ week_start|date:'Y-m-d' }}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="quick_add_product">
+        <input type="hidden" name="serving_date" value="{{ day.date|date:'Y-m-d' }}">
+        <input type="hidden" name="canteen_id" value="{{ entry.canteen.id }}">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="quickAddLabel-{{ day_key }}-{{ canteen_key }}">
+              Neues Gericht anlegen
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-secondary small">
+              Das Gericht wird sofort für <strong>{{ entry.canteen.name }}</strong>
+              am <strong>{{ day.date|date:"l, d.m.Y" }}</strong> eingetragen.
+            </p>
+            <div class="mb-3">
+              <label class="form-label">Gericht</label>
+              {{ entry.quick_form.name }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Beschreibung</label>
+              {{ entry.quick_form.description }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Preis (€)</label>
+              {{ entry.quick_form.price_gross }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Abbrechen</button>
+            <button type="submit" class="btn btn-primary">Anlegen und hinzufügen</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endwith %}
+  {% endfor %}
+</section>
+{% endfor %}
+{% endblock %}

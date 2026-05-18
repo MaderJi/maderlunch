@@ -1,0 +1,43 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ product.name }} bearbeiten – MaderLunch{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h1 class="h4 mb-0">Gericht bearbeiten</h1>
+      <a href="{% url 'lunch:product_list' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zur Liste
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.name.id_for_label }}">Gericht</label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors|join:", " }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.description.id_for_label }}">Beschreibung</label>
+            {{ form.description }}
+            {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors|join:", " }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.price_gross.id_for_label }}">Preis (€)</label>
+            {{ form.price_gross }}
+            {% if form.price_gross.errors %}<div class="text-danger small mt-1">{{ form.price_gross.errors|join:", " }}</div>{% endif %}
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'lunch:product_list' %}" class="btn btn-outline-secondary">Abbrechen</a>
+            <button type="submit" class="btn btn-primary">Speichern</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

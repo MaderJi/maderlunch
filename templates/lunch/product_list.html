@@ -1,0 +1,106 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Gerichte verwalten – MaderLunch{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+  <div>
+    <h1 class="h4 mb-1">Gerichte verwalten</h1>
+    <div class="text-secondary small">
+      {{ products|length }} Gerichte insgesamt
+    </div>
+  </div>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProductModal">
+    <i class="bi bi-plus-lg me-1"></i>Neues Gericht
+  </button>
+</div>
+
+{% if products %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Gericht</th>
+          <th>Beschreibung</th>
+          <th class="text-end">Preis</th>
+          <th>Status</th>
+          <th class="text-end">Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr {% if not product.is_active %}class="text-secondary"{% endif %}>
+          <td><strong>{{ product.name }}</strong></td>
+          <td class="small">{{ product.description|truncatechars:80 }}</td>
+          <td class="text-end">{{ product.price_gross|floatformat:2 }} €</td>
+          <td>
+            {% if product.is_active %}
+              <span class="badge text-bg-success">Aktiv</span>
+            {% else %}
+              <span class="badge text-bg-secondary">Inaktiv</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{% url 'lunch:product_edit' product.id %}" class="btn btn-sm btn-outline-secondary" title="Bearbeiten">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <form method="post" action="{% url 'lunch:product_toggle_active' product.id %}" class="d-inline m-0">
+              {% csrf_token %}
+              {% if product.is_active %}
+                <button type="submit" class="btn btn-sm btn-outline-warning" title="Deaktivieren">
+                  <i class="bi bi-eye-slash"></i>
+                </button>
+              {% else %}
+                <button type="submit" class="btn btn-sm btn-outline-success" title="Aktivieren">
+                  <i class="bi bi-eye"></i>
+                </button>
+              {% endif %}
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+  Noch keine Gerichte angelegt. Über „Neues Gericht" anlegen.
+</div>
+{% endif %}
+
+<!-- Modal: Neues Gericht anlegen -->
+<div class="modal fade" id="createProductModal" tabindex="-1" aria-labelledby="createProductLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="{% url 'lunch:product_create' %}">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createProductLabel">Neues Gericht anlegen</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Gericht</label>
+            {{ create_form.name }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Beschreibung</label>
+            {{ create_form.description }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Preis (€)</label>
+            {{ create_form.price_gross }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Abbrechen</button>
+          <button type="submit" class="btn btn-primary">Anlegen</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

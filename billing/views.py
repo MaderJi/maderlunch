@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 
-from django.contrib.auth.decorators import login_required, user_passes_test
+from accounts.permissions import manager_required
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -10,12 +10,8 @@ from lunch.models import Order
 from .exporters import export_orders_csv
 
 
-def _is_admin(user):
-    return user.is_authenticated and user.groups.filter(name="Admin").exists()
 
-
-@login_required
-@user_passes_test(_is_admin, login_url="account_login")
+@manager_required
 def export_form(request):
     today = date.today()
     default_from = (today - timedelta(days=30)).isoformat()
@@ -26,8 +22,7 @@ def export_form(request):
     })
 
 
-@login_required
-@user_passes_test(_is_admin, login_url="account_login")
+@manager_required
 def export_orders(request):
     try:
         d_from = datetime.fromisoformat(request.GET["from"]).date()
