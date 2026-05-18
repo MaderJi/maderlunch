@@ -177,6 +177,7 @@ SOCIALACCOUNT_PROVIDERS = {
 
 LOCAL_LOGIN_ALLOWED_NETWORKS = [
     "10.75.0.0/21",   # Server-Admin-Workstations (MALE-SRVMGMT)
+    "10.75.75.0/24",  # LAN/Client-Netz
     "127.0.0.0/8",    # Container-internal (Health-Checks, etc.)
 ]
 
