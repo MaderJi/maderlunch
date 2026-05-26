@@ -196,9 +196,12 @@ class Order(models.Model):
         verbose_name = "Bestellung"
         verbose_name_plural = "Bestellungen"
         constraints = [
+            # Nur eine aktive Bestellung pro (User, Slot). Stornierte Orders bleiben
+            # als History-Zeilen in der DB liegen, ohne Neubestellungen zu blockieren.
             models.UniqueConstraint(
                 fields=["user_profile", "meal_slot"],
-                name="uniq_order_per_user_slot",
+                condition=models.Q(status="placed"),
+                name="uniq_active_order_per_user_slot",
             ),
         ]
         ordering = ("-placed_at",)
