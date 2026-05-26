@@ -18,26 +18,48 @@
         {% if error %}<div class="text-danger small mb-2">{{ error }}</div>{% endif %}
         {% if success %}<div class="text-success small mb-2">{{ success }}</div>{% endif %}
 
+        {% with window_open=slot.order_window_open %}
         {% if my_order and my_order.status == "placed" %}
           <span class="badge bg-success me-2">Bestellt</span>
-          <button class="btn btn-outline-danger btn-sm"
-                  hx-post="{% url 'lunch:order_cancel' my_order.pk %}"
-                  hx-target="#slot-{{ slot.pk }}"
-                  hx-swap="outerHTML">
-            Stornieren
-          </button>
+          {% if window_open %}
+            <button class="btn btn-outline-danger btn-sm"
+                    hx-post="{% url 'lunch:order_cancel' my_order.pk %}"
+                    hx-target="#slot-{{ slot.pk }}"
+                    hx-swap="outerHTML">
+              Stornieren
+            </button>
+          {% else %}
+            <button class="btn btn-outline-secondary btn-sm" disabled
+                    title="Storno-Frist abgelaufen">
+              Storno-Frist abgelaufen
+            </button>
+          {% endif %}
         {% elif my_order and my_order.status == "served" %}
           <span class="badge bg-secondary">Ausgegeben</span>
         {% elif my_order and my_order.status == "cancelled" %}
           <span class="badge bg-light text-dark">Storniert</span>
         {% else %}
-          <button class="btn btn-primary btn-sm"
-                  hx-post="{% url 'lunch:order_place' slot.pk %}"
-                  hx-target="#slot-{{ slot.pk }}"
-                  hx-swap="outerHTML">
-            Bestellen
-          </button>
+          {% if window_open %}
+            <button class="btn btn-primary btn-sm"
+                    hx-post="{% url 'lunch:order_place' slot.pk %}"
+                    hx-target="#slot-{{ slot.pk }}"
+                    hx-swap="outerHTML">
+              Bestellen
+            </button>
+          {% else %}
+            <button class="btn btn-outline-secondary btn-sm" disabled
+                    title="Bestellfrist abgelaufen">
+              Bestellfrist abgelaufen
+            </button>
+          {% endif %}
         {% endif %}
+
+        {% if window_open %}
+          <div class="text-muted small mt-2">
+            Frist bis {{ slot.order_deadline|date:"D, d.m. H:i" }}
+          </div>
+        {% endif %}
+        {% endwith %}
       </div>
     </div>
   </div>

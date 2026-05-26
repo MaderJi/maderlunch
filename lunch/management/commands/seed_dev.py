@@ -84,9 +84,7 @@ class Command(BaseCommand):
                 location=loc, code="K1",
                 defaults={
                     "name": f"Kantine {loc.name}",
-                    "cutoff_order_time": time(9, 0),
                     "serving_time": time(11, 30),
-                    "cancel_cutoff_minutes_before_serving": 60,
                 },
             )
             canteens[code] = canteen

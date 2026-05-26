@@ -120,15 +120,20 @@ def mealplan_week(request):
         slots_by_day[d].sort(key=lambda s: (s.mealplan.canteen.name, s.product.name))
 
     profile = getattr(request.user, "profile", None)
-    my_orders_by_slot = {}
+    my_orders_by_slot: dict = {}
+    my_order_summary: dict = {}  # {date: "Gerichtname"} für Tagesleiste oben
     if profile:
-        my_orders_by_slot = {
-            o.meal_slot_id: o
-            for o in Order.objects.filter(
+        my_orders_qs = (
+            Order.objects.filter(
                 user_profile=profile,
                 meal_slot__mealplan__serving_date__in=week_days,
             )
-        }
+            .select_related("meal_slot__product", "meal_slot__mealplan")
+        )
+        for o in my_orders_qs:
+            my_orders_by_slot[o.meal_slot_id] = o
+            if o.status == Order.STATUS_PLACED:
+                my_order_summary[o.meal_slot.mealplan.serving_date] = o.meal_slot.product.name
 
     return render(request, "lunch/mealplan.html", {
         "monday": monday,
@@ -139,6 +144,7 @@ def mealplan_week(request):
         "selected_canteen": selected_canteen,
         "slots_by_day": slots_by_day,
         "my_orders_by_slot": my_orders_by_slot,
+        "my_order_summary": my_order_summary,
     })
 
 
