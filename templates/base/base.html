@@ -34,6 +34,8 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'lunch:mealplan_week' %}">Speiseplan</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'lunch:my_orders' %}">Meine Bestellungen</a></li>
           {% if user.profile.is_manager %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'lunch:manage_plan' %}">Speiseplan verwalten</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'lunch:product_list' %}">Gerichte</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'lunch:pickup' %}">Ausgabe</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'billing:export_form' %}">Export</a></li>
           {% endif %}
@@ -90,7 +92,7 @@
         </div>
         <div>
           Interne Anwendung der Mader GmbH &amp; Co.&nbsp;KG.<br>
-          Bei Fragen oder Problemen: <a href="mailto:it@mader.eu">it@mader.eu</a>
+          Bei Fragen oder Problemen: <a href="mailto:aws@mader.eu">aws@mader.eu</a>
         </div>
       </div>
       <div class="col-md-6 mt-3 mt-md-0">

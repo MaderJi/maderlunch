@@ -150,6 +150,7 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_STORE_TOKENS = False
+SOCIALACCOUNT_LOGIN_ON_GET = True   # Microsoft-Bestätigungsseite überspringen
 
 # Microsoft / Entra Provider — Single-Tenant
 SOCIALACCOUNT_PROVIDERS = {
@@ -177,6 +178,7 @@ SOCIALACCOUNT_PROVIDERS = {
 
 LOCAL_LOGIN_ALLOWED_NETWORKS = [
     "10.75.0.0/21",   # Server-Admin-Workstations (MALE-SRVMGMT)
+    "10.75.75.0/24",  # LAN/Client-Netz
     "127.0.0.0/8",    # Container-internal (Health-Checks, etc.)
 ]
 

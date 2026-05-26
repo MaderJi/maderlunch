@@ -1,10 +1,12 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, time
 from decimal import Decimal
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
+
+from .deadlines import get_order_deadline, is_order_window_open
 
 
 class Location(models.Model):
@@ -26,14 +28,6 @@ class Canteen(models.Model):
     location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="canteens")
     name = models.CharField("Kantine", max_length=100)
     code = models.CharField("Kürzel", max_length=20)
-    cutoff_order_time = models.TimeField(
-        "Bestellfrist (Uhrzeit am Servier-Tag)",
-        default=time(9, 0),
-    )
-    cancel_cutoff_minutes_before_serving = models.PositiveIntegerField(
-        "Storno-Frist (Minuten vor Ausgabe)",
-        default=60,
-    )
     serving_time = models.TimeField("Ausgabezeit", default=time(11, 30))
     is_active = models.BooleanField(default=True)
 
@@ -162,19 +156,16 @@ class MealSlot(models.Model):
         naive = datetime.combine(d, t)
         return timezone.make_aware(naive, timezone.get_current_timezone())
 
-    def order_window_open(self, now=None) -> bool:
-        now = now or timezone.localtime()
-        cutoff = self.mealplan.canteen.cutoff_order_time
-        order_deadline = timezone.make_aware(
-            datetime.combine(self.mealplan.serving_date, cutoff),
-            timezone.get_current_timezone(),
-        )
-        return now <= order_deadline
+    @property
+    def order_deadline(self) -> datetime:
+        """Letztmöglicher Bestell-/Storno-Zeitpunkt (Wochenblock-Logik)."""
+        return get_order_deadline(self.mealplan.serving_date)
 
-    def cancel_window_open(self, now=None) -> bool:
-        now = now or timezone.localtime()
-        delta = timedelta(minutes=self.mealplan.canteen.cancel_cutoff_minutes_before_serving)
-        return now <= (self.serving_datetime - delta)
+    def order_window_open(self, now=None) -> bool:
+        return is_order_window_open(self.mealplan.serving_date, now=now)
+
+    # Storno- und Bestellfrist sind identisch (Produktentscheidung MVP).
+    cancel_window_open = order_window_open
 
 
 class Order(models.Model):
@@ -205,9 +196,12 @@ class Order(models.Model):
         verbose_name = "Bestellung"
         verbose_name_plural = "Bestellungen"
         constraints = [
+            # Nur eine aktive Bestellung pro (User, Slot). Stornierte Orders bleiben
+            # als History-Zeilen in der DB liegen, ohne Neubestellungen zu blockieren.
             models.UniqueConstraint(
                 fields=["user_profile", "meal_slot"],
-                name="uniq_order_per_user_slot",
+                condition=models.Q(status="placed"),
+                name="uniq_active_order_per_user_slot",
             ),
         ]
         ordering = ("-placed_at",)

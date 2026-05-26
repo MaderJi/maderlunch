@@ -30,6 +30,30 @@
   </form>
 {% endif %}
 
+{# Schneller Wochen-Überblick: was habe ich pro Tag bestellt? #}
+<div class="card mb-4">
+  <div class="card-body py-2">
+    <div class="row text-center">
+      {% for day in week_days %}
+        {% with my=my_order_summary|dict_get:day %}
+          <div class="col">
+            <div class="small text-muted">{{ day|date:"D, d.m." }}</div>
+            {% if my %}
+              <span class="badge bg-success" title="{{ my }}">
+                <i class="bi bi-check-circle"></i> Bestellt
+              </span>
+            {% else %}
+              <span class="badge bg-light text-dark">
+                <i class="bi bi-dash-circle"></i> Keine Bestellung
+              </span>
+            {% endif %}
+          </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
 {% for day in week_days %}
   <h2 class="h5 mt-4">{{ day|date:"l, j. F" }}</h2>
   {% with day_slots=slots_by_day|dict_get:day %}

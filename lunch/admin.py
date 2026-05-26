@@ -15,7 +15,7 @@ class LocationAdmin(admin.ModelAdmin):
 
 @admin.register(Canteen)
 class CanteenAdmin(admin.ModelAdmin):
-    list_display = ("name", "code", "location", "cutoff_order_time", "serving_time", "is_active")
+    list_display = ("name", "code", "location", "serving_time", "is_active")
     list_filter = ("is_active", "location")
     search_fields = ("name", "code")
     autocomplete_fields = ("location",)
