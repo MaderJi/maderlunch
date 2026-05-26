@@ -127,6 +127,7 @@ def mealplan_week(request):
             Order.objects.filter(
                 user_profile=profile,
                 meal_slot__mealplan__serving_date__in=week_days,
+                status__in=[Order.STATUS_PLACED, Order.STATUS_SERVED],
             )
             .select_related("meal_slot__product", "meal_slot__mealplan")
         )
@@ -195,6 +196,7 @@ def _slot_fragment(request, slot: MealSlot, *, order: Order | None = None,
     profile = getattr(request.user, "profile", None)
     my_order = order or Order.objects.filter(
         user_profile=profile, meal_slot=slot,
+        status__in=[Order.STATUS_PLACED, Order.STATUS_SERVED],
     ).order_by("-placed_at").first()
     return render(request, "lunch/_slot.html", {
         "slot": slot,
